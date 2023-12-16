@@ -4,12 +4,6 @@ type CubeCounts = {
   green: number
 }
 
-const MAXIMUM_COUNTS: CubeCounts = {
-  red: 12,
-  blue: 13,
-  green: 14
-}
-
 const parseCubeCounts = (move: string[]) => {
   const cubes: CubeCounts = { red: 0, blue: 0, green: 0 }
   move.forEach(selection => {
@@ -22,26 +16,27 @@ const parseCubeCounts = (move: string[]) => {
   return cubes
 }
 
-const determinePossibility = (cubeCount: CubeCounts) => {
-  const out = Object.entries(cubeCount).map(([colour, count]) =>
-    count <= MAXIMUM_COUNTS[colour as keyof CubeCounts]
-  )
-  return out.every(Boolean)
-}
-
 const handleLine = (line: string) => {
   const moves = line.split(':')[1].split(';').map(move => move.split(','))
-  const movesWerePossible = moves.map(parseCubeCounts).map(determinePossibility)
-  console.log('🚀 ~ file: index.ts:39 ~ handleLine ~ movesWerePossible:', movesWerePossible);
-  return movesWerePossible.every(Boolean)
+  const minimums = {
+    red: 0,
+    blue: 0,
+    green: 0,
+  };
+  moves.forEach((move) => {
+    const cubeCounts = parseCubeCounts(move)
+    Object.keys(cubeCounts).forEach((color) => {
+      const cubeColour = color as keyof CubeCounts
+      minimums[cubeColour] = Math.max(cubeCounts[cubeColour], minimums[cubeColour])
+    })
+  });
+  return minimums.red * minimums.blue * minimums.green;
 }
 
-const res = (await Bun.file('day2/test_input.txt').text())
+const res = (await Bun.file('day2/input.txt').text())
   .trim()
   .split('\n')
-  .splice(2, 1)
   .map(handleLine)
-  .reduce((acc, curr) => acc && curr, true)
-
+  .reduce((acc, power) => acc + power, 0)
 
 console.log(res)
